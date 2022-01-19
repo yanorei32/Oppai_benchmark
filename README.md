@@ -1,9 +1,11 @@
-# Oppai Benchmark yr32builds
+# lw_oppai_benchmark
+
+oppai_benchmark light-weight fork.
 
 ## How to
 
 ```shell
-Oppai_benchmark c
+./lw_oppai_benchmark
 ```
 
 ## Results
