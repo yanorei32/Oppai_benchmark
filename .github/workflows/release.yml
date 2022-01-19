@@ -29,6 +29,11 @@ jobs:
           - version: "1.17"
             _386: ""
             arch: "386"
+            os: "android"
+
+          - version: "1.17"
+            _386: ""
+            arch: "386"
             os: "darwin"
 
     steps:
