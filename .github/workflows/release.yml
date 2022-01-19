@@ -68,3 +68,11 @@ jobs:
           title: "Development Build"
           files: |
             *.zip
+
+      - name: tagged-release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            *.zip
+
