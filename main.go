@@ -1,45 +1,34 @@
 package main
 
 import (
-	"log"
-	"os"
-	"sort"
-
-	"github.com/urfave/cli/v2"
+	"fmt"
+	"time"
 )
 
+type chan_t struct {
+	t     float64
+	S     float64
+	score float64
+}
+
+var benchmark_running bool
+var chan_data chan chan_t
+
 func main() {
-	app := &cli.App{
-		Flags: []cli.Flag{},
-		Commands: []*cli.Command{
-			{
-				Name:    "GUI",
-				Aliases: []string{"g"},
-				Usage:   "run on gui",
-				Action: func(c *cli.Context) error {
-					return nil
-				},
-			},
-			{
-				Name:    "CLI",
-				Aliases: []string{"c"},
-				Usage:   "run on cli",
-				Action: func(c *cli.Context) error {
-					CLI_main()
-					return nil
-				},
-			},
-		},
-		Action: func(c *cli.Context) error {
-			return nil
-		},
-	}
+	chan_data = make(chan chan_t, 4096)
+	go benchmark()
+	var temp_chan_data chan_t
+	for benchmark_running {
+	L2:
+		for {
+			select {
+			case temp_chan_data = <-chan_data:
 
-	sort.Sort(cli.FlagsByName(app.Flags))
-	sort.Sort(cli.CommandsByName(app.Commands))
-
-	err := app.Run(os.Args)
-	if err != nil {
-		log.Fatal(err)
+			default:
+				break L2
+			}
+		}
+		fmt.Printf("\r Score:%f Area:%f", temp_chan_data.score, temp_chan_data.S)
+		time.Sleep(time.Millisecond * 250)
 	}
 }

@@ -1,12 +1,25 @@
 package main
 
 import (
+	"math"
 	"runtime"
 	"sync"
 	"time"
 )
 
 var thread_n int
+
+func oppai_func(y float64, t float64) float64 {
+	y = 0.02 * (y - 100)
+
+	a1 := (1.5 * math.Exp((0.12*math.Sin(t)-0.5)*math.Pow((y+0.16*math.Sin(t)), 2))) / (1 + math.Exp(-20*(5*y+math.Sin(t))))
+	a2 := ((1.5 + 0.8*math.Pow((y+0.2*math.Sin(t)), 3)) * math.Pow(1+math.Exp(20*(5*y+math.Sin(t))), -1)) / (1 + math.Exp(-(100*(y+1) + 16*math.Sin(t))))
+	a3 := (0.2 * (math.Exp(-math.Pow(y+1, 2)) + 1)) / (1 + math.Exp(100*(y+1)+16*math.Sin(t)))
+	a4 := 0.1 / math.Exp(2*math.Pow((10*y+1.2*(2+math.Sin(t))*math.Sin(t)), 4))
+
+	return 65 * (a1 + a2 + a3 + a4)
+
+}
 
 func integral_f_p(alpha, beta float64, f func(float64) float64) float64 {
 	wg := &sync.WaitGroup{}
@@ -61,7 +74,7 @@ func benchmark() {
 	for t := 0.0; time.Now().Unix() <= start_time.Add(time.Duration(N_sec)*time.Second).Unix() || t < N; t += delta_time {
 		t2 := t
 		start_time := time.Now()
-		S := integral_f_p(-1000, 1000, func(v float64) float64 { return Oppai_func(v, t2) })
+		S := integral_f_p(-1000, 1000, func(v float64) float64 { return oppai_func(v, t2) })
 		end_time := time.Now()
 		scores = append(scores, Get_score(float64(end_time.Sub(start_time))))
 		mean_score := 0.0
