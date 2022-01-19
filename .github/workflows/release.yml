@@ -46,7 +46,6 @@ jobs:
           GO386: ${{ matrix._386 }}
 
   release:
-    runs-on: ubuntu-latest
     needs: build
     steps:
       - name: pre-release
