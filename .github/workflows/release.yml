@@ -11,17 +11,17 @@ jobs:
     strategy:
       matrix:
         version: ["1.17"]
-        386: ""
+        _386: ""
         arch: ["amd64"]
         os: ["linux", "windows", "darwin"]
         include:
           - version: "1.15"
-            386: "387"
+            _386: "387"
             arch: "386"
             os: "windows"
 
           - version: "1.15"
-            386: "387"
+            _386: "387"
             arch: "386"
             os: "linux"
 
@@ -43,7 +43,7 @@ jobs:
         env:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
-          GO386: ${{ matrix.386 }}
+          GO386: ${{ matrix._386 }}
 
       - name: pre-release
         uses: "marvinpinto/action-automatic-releases@latest"
