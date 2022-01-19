@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         version: ["1.17"]
-        _386: ""
+        _386: [""]
         arch: ["amd64"]
         os: ["linux", "windows", "darwin"]
         include:
