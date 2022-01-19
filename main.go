@@ -17,7 +17,6 @@ func main() {
 				Aliases: []string{"g"},
 				Usage:   "run on gui",
 				Action: func(c *cli.Context) error {
-					GUI_main()
 					return nil
 				},
 			},
@@ -32,7 +31,6 @@ func main() {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			GUI_main()
 			return nil
 		},
 	}
