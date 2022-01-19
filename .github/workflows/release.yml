@@ -45,9 +45,19 @@ jobs:
           GOARCH: ${{ matrix.arch }}
           GO386: ${{ matrix._386 }}
 
+      - uses: actions/upload-artifact@v2
+        with:
+          name: artifact
+          path: |
+            *.zip
+
   release:
     needs: build
     steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+
       - name: pre-release
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
