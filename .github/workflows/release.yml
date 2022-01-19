@@ -2,23 +2,55 @@ name: release
 on:
   push:
     tags:
+      - "v*"
+    branches: master
 
 jobs:
-  goreleaser-linux:
+  build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: ["1.17"]
+        386: ""
+        arch: ["amd64"]
+        os: ["linux", "windows", "darwin"]
+        include:
+          - version: "1.15"
+            386: "387"
+            arch: "386"
+            os: "windows"
+
+          - version: "1.15"
+            386: "387"
+            arch: "386"
+            os: "linux"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 1
+
       - name: Setup Go
         uses: actions/setup-go@v1
         with:
-          go-version: 1.15
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v1
-        with:
-          version: latest
-          args: release --rm-dist --config=.goreleaser_linux.yml
+          go-version: ${{ matrix.version }}
+
+      - name: build
+        run: |
+          go build
+          zip -r lw_oppai_benchmark-${GOOS}-${GOARCH}${GO386:+"-$GO386"}.zip lw_oppai_benchmark*
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+          GO386: ${{ matrix.386 }}
+
+      - name: pre-release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Development Build"
+          files: |
+            *.zip
