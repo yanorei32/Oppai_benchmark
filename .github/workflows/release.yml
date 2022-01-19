@@ -12,8 +12,8 @@ jobs:
       matrix:
         version: ["1.17"]
         _386: [""]
-        arch: ["amd64", "386"]
-        os: ["linux", "windows", "darwin"]
+        arch: ["amd64", "386", "arm64"]
+        os: ["linux", "windows", "darwin", "android"]
         include:
           - version: "1.15"
             _386: "387"
