@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+const OppaiFuncTStop = 32.0
+const OppaiFuncDeltaT = 0.5
+const MinimumDuration = 30
+
 var thread_n int
 
 func oppai_func(y float64, t float64) float64 {
@@ -18,17 +22,15 @@ func oppai_func(y float64, t float64) float64 {
 	a4 := 0.1 / math.Exp(2*math.Pow((10*y+1.2*(2+math.Sin(t))*math.Sin(t)), 4))
 
 	return 65 * (a1 + a2 + a3 + a4)
-
 }
 
 func integral_f_p(alpha, beta float64, f func(float64) float64) float64 {
 	wg := &sync.WaitGroup{}
 
-	N := 1000000
+	n := 1000000
 
-	delta := (beta - alpha) / float64(N)
-
-	Data := make([]float64, N+1)
+	delta := (beta - alpha) / float64(n)
+	data := make([]float64, n+1)
 
 	for i := 0; i < thread_n; i++ {
 		wg.Add(1)
@@ -41,52 +43,59 @@ func integral_f_p(alpha, beta float64, f func(float64) float64) float64 {
 				f_b := f(j_d + delta)
 				f_m := f((j_d + j_d + delta) / 2)
 
-				Data[j+i2*(N/thread_n)] = delta / 6 * (f_a + 4*f_m + f_b)
+				data[j+i2*(n/thread_n)] = delta / 6 * (f_a + 4*f_m + f_b)
 				j++
 			}
 			wg.Done()
 		}(i)
 	}
 	wg.Wait()
-	A := 0.0
-	for _, e := range Data {
-		A += e
+	a := 0.0
+	for _, e := range data {
+		a += e
 	}
-	return A
+	return a
 }
 
-func Get_score(v float64) float64 {
-	return 1 / (v / 1000000.0) * 1000000
+func dtime2score(v time.Duration) float32 {
+	return 1 / (float32(v) / 1000000.0) * 1000000
 }
 
-func benchmark() {
+func average(a []float32) float32 {
+	m := float32(0.0)
+
+	for i := 0; i < len(a); i++ {
+		m += a[i]
+	}
+
+	m /= float32(len(a))
+
+	return m
+}
+
+func benchmark(r chan ScoreReport, done chan struct{}) {
 	thread_n = runtime.NumCPU()
-	N := 32.0
-	N_sec := 30
-	delta_time := 0.5
-	chan_data <- chan_t{
-		t:     0,
-		S:     -1,
-		score: -1,
-	}
-	scores := []float64{}
-	start_time := time.Now()
-	for t := 0.0; time.Now().Unix() <= start_time.Add(time.Duration(N_sec)*time.Second).Unix() || t < N; t += delta_time {
-		t2 := t
-		start_time := time.Now()
-		S := integral_f_p(-1000, 1000, func(v float64) float64 { return oppai_func(v, t2) })
-		end_time := time.Now()
-		scores = append(scores, Get_score(float64(end_time.Sub(start_time))))
-		mean_score := 0.0
-		for i := 0; i < len(scores); i++ {
-			mean_score += scores[i]
-		}
-		mean_score /= float64(len(scores))
-		chan_data <- chan_t{
-			t:     t,
-			S:     S,
-			score: mean_score,
+	scores := []float32{}
+
+	benchmark_begin := time.Now().Unix()
+	for func_t := 0.0; time.Now().Unix() <= benchmark_begin+MinimumDuration || func_t < OppaiFuncTStop; func_t += OppaiFuncDeltaT {
+		epoch_start_at := time.Now()
+
+		area := integral_f_p(
+			-1000,
+			1000,
+			func(v float64) float64 {
+				return oppai_func(v, func_t)
+			},
+		)
+
+		scores = append(scores, dtime2score(time.Now().Sub(epoch_start_at)))
+
+		r <- ScoreReport{
+			Area:  area,
+			Score: average(scores),
 		}
 	}
-	benchmark_running = false
+
+	done <- struct{}{}
 }
